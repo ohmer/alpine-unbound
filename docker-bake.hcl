@@ -1,5 +1,5 @@
 target "base" {
-  context = "https://github.com/ohmer/alpine-s6-overlay.git"
+  context = "https://github.com/ohmer/alpine-s6-overlay.git#main"
 
   args = {
     ALPINE_VERSION     = "3.17"
