@@ -16,8 +16,10 @@ RUN set -eux; \
     \
     apk --no-cache add openssl unbound
 
+
 # hadolint ignore=DL3022
-COPY --from=root / /
+COPY --from=root /etc/s6-overlay /etc/s6-overlay
+RUN chmod -R u=rwX,go=rX /etc/s6-overlay
 
 ENV S6_CMD_RECEIVE_SIGNALS=1
 CMD ["fdmove", "-c", "2", "1", "unbound", "-d", "-p"]

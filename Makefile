@@ -7,6 +7,9 @@ all:
 run:
 	docker compose up -d
 
+shell:
+	docker compose exec unbound with-contenv sh
+
 checkconf:
 	docker compose exec unbound unbound-checkconf
 
