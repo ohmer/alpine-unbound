@@ -1,0 +1,83 @@
+backtick -E CONTROL_ENABLE { unbound-checkconf -o control-enable }
+ifelse { test "${CONTROL_ENABLE}" != "yes" }
+{
+    foreground { echo "[unbound-control-setup] remote-control is disabled, not running setup." }
+    exit 0
+}
+
+foreground { echo "[unbound-control-setup] remote-control is enabled." }
+
+backtick -E DIRECTORY { unbound-checkconf -o directory }
+backtick -E SERVER_KEY_FILE { unbound-checkconf -o server-key-file }
+backtick -E SERVER_CERT_FILE { unbound-checkconf -o server-cert-file }
+backtick -E CONTROL_KEY_FILE { unbound-checkconf -o control-key-file }
+backtick -E CONTROL_CERT_FILE { unbound-checkconf -o control-cert-file }
+
+foreground { echo "[unbound-control-setup] directory: ${DIRECTORY}" }
+foreground { echo "[unbound-control-setup] server-key-file: ${SERVER_KEY_FILE}" }
+foreground { echo "[unbound-control-setup] server-cert-file: ${SERVER_CERT_FILE}" }
+foreground { echo "[unbound-control-setup] control-key-file: ${CONTROL_KEY_FILE}" }
+foreground { echo "[unbound-control-setup] control-cert-file: ${CONTROL_CERT_FILE}" }
+
+execline-cd ${DIRECTORY}
+ifelse { test -f "${SERVER_KEY_FILE}" -a -f "${SERVER_CERT_FILE}" -a -f "${CONTROL_KEY_FILE}" -a -f "${CONTROL_CERT_FILE}" }
+{
+    foreground { echo "[unbound-control-setup] key and certificate files exist, not running setup." }
+    exit 0
+}
+
+foreground { echo "[unbound-control-setup] key and certificate files missing, running setup." }
+
+ifelse -n { s6-setuidgid unbound unbound-control-setup -d "${DIRECTORY}" }
+{
+    foreground { echo "[unbound-control-setup] setup failed in directory ${DIRECTORY}." }
+    exit 1
+}
+
+backtick -E SERVER_KEY_DIR { dirname "${SERVER_KEY_FILE}" }
+ifelse -n { mkdir -m 755 -p "${SERVER_KEY_DIR}" }
+{
+    foreground { echo "[unbound-control-setup] error creating directory ${SERVER_KEY_DIR}." }
+    exit 1
+}
+ifelse -n { mv -f "${DIRECTORY}/unbound_server.key" "${SERVER_KEY_FILE}" }
+{
+    foreground { echo "[unbound-control-setup] error moving unbound_server.key to ${SERVER_KEY_FILE}." }
+    exit 1
+}
+
+backtick -E SERVER_CERT_DIR { dirname "${SERVER_CERT_FILE}" }
+ifelse -n { mkdir -m 755 -p "${SERVER_CERT_DIR}" }
+{
+    foreground { echo "[unbound-control-setup] error creating directory ${SERVER_CERT_DIR}." }
+    exit 1
+}
+ifelse -n { mv -f "${DIRECTORY}/unbound_server.pem" "${SERVER_CERT_FILE}" }
+{
+    foreground { echo "[unbound-control-setup] error moving unbound_server.pem to ${SERVER_CERT_FILE}." }
+    exit 1
+}
+
+backtick -E CONTROL_KEY_DIR { dirname "${CONTROL_KEY_FILE}" }
+ifelse -n { mkdir -m 755 -p "${CONTROL_KEY_DIR}" }
+{
+    foreground { echo "[unbound-control-setup] error creating directory ${CONTROL_KEY_DIR}." }
+    exit 1
+}
+ifelse -n { mv -f "${DIRECTORY}/unbound_control.key" "${CONTROL_KEY_FILE}" }
+{
+    foreground { echo "[unbound-control-setup] error moving unbound_control.key to ${CONTROL_KEY_FILE}." }
+    exit 1
+}
+
+backtick -E CONTROL_CERT_DIR { dirname "${CONTROL_CERT_FILE}" }
+ifelse -n { mkdir -m 755 -p "${CONTROL_CERT_DIR}" }
+{
+    foreground { echo "[unbound-control-setup] error creating directory ${CONTROL_CERT_DIR}." }
+    exit 1
+}
+ifelse -n { mv -f "${DIRECTORY}/unbound_control.pem" "${CONTROL_CERT_FILE}" }
+{
+    foreground { echo "[unbound-control-setup] error moving unbound_control.pem to ${CONTROL_CERT_FILE}." }
+    exit 1
+}

@@ -1,0 +1,2 @@
+s6-setuidgid unbound
+unbound-anchor -a /etc/unbound/root.key
